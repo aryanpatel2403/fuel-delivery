@@ -26,12 +26,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 }) => {
   const [isSignUp, setIsSignUp] = useState(initialMode === 'signup');
   const [role, setRole] = useState<UserRole>(initialRole);
-  const [email, setEmail] = useState('24172022025@gnu.ac.in');
-  const [password, setPassword] = useState('password123');
-  const [name, setName] = useState('Aryan Varma');
-  const [phone, setPhone] = useState('+91 98791 23456');
-  const [vehicleBrand, setVehicleBrand] = useState('Tata');
-  const [vehicleModel, setVehicleModel] = useState('Nexon');
+  const [email, setEmail] = useState(initialMode === 'signup' ? '' : '24172022025@gnu.ac.in');
+  const [password, setPassword] = useState(initialMode === 'signup' ? '' : 'password123');
+  const [name, setName] = useState(initialMode === 'signup' ? '' : 'Aryan Varma');
+  const [phone, setPhone] = useState(initialMode === 'signup' ? '' : '+91 98791 23456');
+  const [vehicleBrand, setVehicleBrand] = useState('');
+  const [vehicleModel, setVehicleModel] = useState('');
+  const [vehicleReg, setVehicleReg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
@@ -40,23 +41,35 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setIsSignUp(isUp);
     if (isUp) {
       setRole('customer');
+      // Ensure all fields are clear when opening sign-up
+      setEmail('');
+      setPassword('');
+      setName('');
+      setPhone('');
+      setVehicleBrand('');
+      setVehicleModel('');
+      setVehicleReg('');
     }
   }, [initialMode]);
 
   const handleRoleQuickFill = (targetRole: UserRole) => {
+    if (isSignUp) return; // Disallow prefill in signup mode
     setRole(targetRole);
     if (targetRole === 'customer') {
       setEmail('24172022025@gnu.ac.in');
       setName('Aryan Varma');
       setPhone('+91 98791 23456');
+      setPassword('password123');
     } else if (targetRole === 'driver') {
       setEmail('driver@fuelup.in');
       setName('Ramesh Patel');
       setPhone('+91 98250 44128');
+      setPassword('password123');
     } else {
       setEmail('admin@fuelup.in');
       setName('System Operations Lead');
       setPhone('+91 98240 00100');
+      setPassword('password123');
     }
   };
 
@@ -76,19 +89,29 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         id: fbUser.uid,
         name: fbUser.displayName || 'FuelUp Member',
         email: fbUser.email || '',
-        phone: fbUser.phoneNumber || '+91 98791 23456',
+        phone: fbUser.phoneNumber || '',
         role: userRole,
-        avatarUrl: fbUser.photoURL || undefined
+        avatarUrl: fbUser.photoURL || undefined,
+        savedVehicles: [],
+        savedAddresses: []
       };
 
-      await store.login(userProfile);
+      if (isSignUp) {
+        await store.signUp(userProfile);
+      } else {
+        await store.login(userProfile);
+      }
       onSuccess(userRole);
     } catch (err) {
       console.warn('Google sign-in completed or fallback used:', err);
-      // Fallback for sandboxed preview if popups are intercepted
-      const fallbackUser = DEMO_USERS[role];
-      await store.login(fallbackUser);
-      onSuccess(fallbackUser.role);
+      if (isSignUp) {
+        setErrorMsg('Google sign-up could not be completed. Please fill in your details below.');
+      } else {
+        // Fallback for sandboxed preview if popups are intercepted in sign-in mode
+        const fallbackUser = DEMO_USERS[role];
+        await store.login(fallbackUser);
+        onSuccess(fallbackUser.role);
+      }
     } finally {
       setIsAuthenticating(false);
     }
@@ -101,39 +124,74 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
     try {
       if (isSignUp) {
+        // Strict Validation: No blank or bypass submissions allowed
+        const trimmedName = name.trim();
+        const trimmedEmail = email.trim().toLowerCase();
+        const trimmedPhone = phone.trim();
+        const cleanDigits = trimmedPhone.replace(/\D/g, '');
+
+        if (!trimmedName || trimmedName.length < 2) {
+          setErrorMsg('Please enter your valid full name (minimum 2 characters).');
+          setIsAuthenticating(false);
+          return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
+          setErrorMsg('Please enter a valid email address.');
+          setIsAuthenticating(false);
+          return;
+        }
+
+        if (cleanDigits.length < 10) {
+          setErrorMsg('Please enter a valid 10-digit mobile phone number.');
+          setIsAuthenticating(false);
+          return;
+        }
+
+        if (!password || password.length < 6) {
+          setErrorMsg('Password must be at least 6 characters.');
+          setIsAuthenticating(false);
+          return;
+        }
+
+        // Only register vehicle if user deliberately filled it in (no direct mock vehicle)
+        const userVehicles = (vehicleBrand.trim() && vehicleModel.trim()) ? [
+          {
+            id: `veh-${Date.now()}`,
+            brand: vehicleBrand.trim(),
+            model: vehicleModel.trim(),
+            category: 'suv' as const,
+            fuelType: 'petrol' as const,
+            tankCapacity: 45,
+            regNumber: vehicleReg.trim() || 'Pending Registration'
+          }
+        ] : [];
+
         const newUser: User = {
           id: `usr-${Date.now()}`,
-          name: name.trim(),
-          email: email.trim(),
-          phone: phone.trim(),
+          name: trimmedName,
+          email: trimmedEmail,
+          phone: trimmedPhone,
           role: 'customer',
-          savedVehicles: [
-            {
-              id: `veh-${Date.now()}`,
-              brand: vehicleBrand,
-              model: vehicleModel,
-              category: 'suv',
-              fuelType: 'petrol',
-              tankCapacity: 44,
-              regNumber: 'GJ-01-XX-9900'
-            }
-          ],
-          savedAddresses: [
-            {
-              id: `addr-${Date.now()}`,
-              title: 'Primary Location',
-              address: 'Near SG Highway, Bodakdev',
-              district: 'Ahmedabad',
-              city: 'Bodakdev',
-              lat: 23.0375,
-              lng: 72.5182
-            }
-          ]
+          savedVehicles: userVehicles,
+          savedAddresses: [] // Clean: No fake/mock addresses injected
         };
         await store.signUp(newUser);
         onSuccess('customer');
       } else {
         // Sign In
+        if (!email.trim()) {
+          setErrorMsg('Please enter your email address.');
+          setIsAuthenticating(false);
+          return;
+        }
+        if (!password) {
+          setErrorMsg('Please enter your password.');
+          setIsAuthenticating(false);
+          return;
+        }
+
         const matchingDemo = DEMO_USERS[role];
         const loggedUser: User = {
           ...matchingDemo,
@@ -277,7 +335,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Aryan Varma"
+                  placeholder="Enter your full name"
                   className="w-full rounded-xl border border-slate-300 bg-white py-2 pl-9 pr-3 text-xs focus:outline-amber-500"
                   required
                 />
@@ -293,7 +351,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
+                placeholder="Enter your email address"
                 className="w-full rounded-xl border border-slate-300 bg-white py-2 pl-9 pr-3 text-xs focus:outline-amber-500"
                 required
               />
@@ -309,7 +367,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+91 98791 23456"
+                  placeholder="Enter 10-digit mobile number"
                   className="w-full rounded-xl border border-slate-300 bg-white py-2 pl-9 pr-3 text-xs focus:outline-amber-500"
                   required
                 />
@@ -329,7 +387,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   type="text"
                   value={vehicleBrand}
                   onChange={(e) => setVehicleBrand(e.target.value)}
-                  placeholder="Tata"
+                  placeholder="e.g. Hyundai, Tata"
                   className="w-full rounded-lg border border-slate-300 bg-white p-1.5 text-xs"
                 />
               </div>
@@ -339,8 +397,18 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   type="text"
                   value={vehicleModel}
                   onChange={(e) => setVehicleModel(e.target.value)}
-                  placeholder="Nexon"
+                  placeholder="e.g. Creta, Nexon"
                   className="w-full rounded-lg border border-slate-300 bg-white p-1.5 text-xs"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="text-[10px] text-slate-500 block mb-0.5">Registration Plate (Optional)</label>
+                <input
+                  type="text"
+                  value={vehicleReg}
+                  onChange={(e) => setVehicleReg(e.target.value.toUpperCase())}
+                  placeholder="e.g. GJ-01-AB-1234"
+                  className="w-full rounded-lg border border-slate-300 bg-white p-1.5 text-xs font-mono uppercase"
                 />
               </div>
             </div>
@@ -365,7 +433,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder={isSignUp ? 'Create a secure password (min 6 chars)' : '••••••••'}
                 className="w-full rounded-xl border border-slate-300 bg-white py-2 pl-9 pr-3 text-xs focus:outline-amber-500"
                 required
               />
@@ -390,8 +458,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               onClick={() => {
                 const nextMode = isSignUp ? 'signin' : 'signup';
                 setIsSignUp(!isSignUp);
+                setErrorMsg('');
                 if (!isSignUp) {
                   setRole('customer');
+                  setEmail('');
+                  setPassword('');
+                  setName('');
+                  setPhone('');
+                  setVehicleBrand('');
+                  setVehicleModel('');
+                  setVehicleReg('');
                 }
                 onSwitchMode(nextMode);
               }}
