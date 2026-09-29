@@ -1,0 +1,158 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with contact information, role, and saved vehicles/addresses",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "format": "email", "maxLength": 120 },
+        "phone": { "type": "string", "maxLength": 20 },
+        "role": { "type": "string", "enum": ["customer", "driver", "admin"] },
+        "savedVehicles": { "type": "array" },
+        "savedAddresses": { "type": "array" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "email", "role"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Fuel delivery order with coordinates, pricing, and live timeline",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "orderNumber": { "type": "string", "maxLength": 30 },
+        "customerId": { "type": "string", "maxLength": 128 },
+        "customerName": { "type": "string", "maxLength": 100 },
+        "customerPhone": { "type": "string", "maxLength": 25 },
+        "deliveryAddress": { "type": "string", "maxLength": 300 },
+        "district": { "type": "string", "maxLength": 50 },
+        "city": { "type": "string", "maxLength": 50 },
+        "lat": { "type": "number" },
+        "lng": { "type": "number" },
+        "pumpStationId": { "type": "string", "maxLength": 128 },
+        "pumpStationName": { "type": "string", "maxLength": 150 },
+        "fuelType": { "type": "string", "enum": ["petrol", "diesel"] },
+        "quantityMode": { "type": "string", "enum": ["liters", "fill_tank"] },
+        "quantityLiters": { "type": "number" },
+        "pricePerLiter": { "type": "number" },
+        "fuelAmount": { "type": "number" },
+        "deliveryFee": { "type": "number" },
+        "emergencyFee": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["gpay", "cod"] },
+        "paymentStatus": { "type": "string", "enum": ["pending", "paid", "pay_on_delivery"] },
+        "deliveryMode": { "type": "string", "enum": ["instant", "scheduled", "sos"] },
+        "scheduledDateTime": { "type": "string" },
+        "assignedDriverId": { "type": "string", "maxLength": 128 },
+        "assignedDriverName": { "type": "string", "maxLength": 100 },
+        "assignedDriverPhone": { "type": "string", "maxLength": 25 },
+        "driverVehicleNumber": { "type": "string", "maxLength": 30 },
+        "driverLat": { "type": "number" },
+        "driverLng": { "type": "number" },
+        "status": {
+          "type": "string",
+          "enum": ["placed", "confirmed", "dispatched", "out_for_delivery", "arrived", "completed", "cancelled"]
+        },
+        "timeline": { "type": "array" },
+        "rating": { "type": "number" },
+        "review": { "type": "string", "maxLength": 500 },
+        "vehicleDetails": { "type": "object" },
+        "notes": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": [
+        "id",
+        "orderNumber",
+        "customerId",
+        "customerName",
+        "deliveryAddress",
+        "fuelType",
+        "quantityLiters",
+        "pricePerLiter",
+        "totalAmount",
+        "paymentMethod",
+        "status"
+      ]
+    },
+    "Pump": {
+      "title": "Pump",
+      "description": "Partner petrol pump station with live rates and status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 150 },
+        "brand": { "type": "string", "maxLength": 50 },
+        "address": { "type": "string", "maxLength": 250 },
+        "district": { "type": "string", "maxLength": 50 },
+        "city": { "type": "string", "maxLength": 50 },
+        "lat": { "type": "number" },
+        "lng": { "type": "number" },
+        "petrolPrice": { "type": "number" },
+        "dieselPrice": { "type": "number" },
+        "rating": { "type": "number" },
+        "openHours": { "type": "string", "maxLength": 50 },
+        "available": { "type": "boolean" },
+        "distanceKm": { "type": "number" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "brand", "petrolPrice", "dieselPrice", "available"]
+    },
+    "Driver": {
+      "title": "Driver",
+      "description": "Bowser driver specialist and real-time payload tracking",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "phone": { "type": "string", "maxLength": 25 },
+        "email": { "type": "string", "format": "email", "maxLength": 120 },
+        "vehicleNumber": { "type": "string", "maxLength": 30 },
+        "bowserCapacityLiters": { "type": "number" },
+        "currentFuelPayload": { "type": "object" },
+        "lat": { "type": "number" },
+        "lng": { "type": "number" },
+        "status": { "type": "string", "enum": ["idle", "on_duty", "delivering", "offline"] },
+        "rating": { "type": "number" },
+        "totalDeliveries": { "type": "number" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "phone", "vehicleNumber", "status"]
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "Designated administrator identity document",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email", "maxLength": 120 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["email"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profile with private contact details, roles, and saved fleet"
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Customer fuel delivery orders and real-time tracking telemetry"
+    },
+    "/pumps/{pumpId}": {
+      "schema": { "$ref": "#/entities/Pump" },
+      "description": "Partner petrol pump stations and daily fuel tariffs"
+    },
+    "/drivers/{driverId}": {
+      "schema": { "$ref": "#/entities/Driver" },
+      "description": "Registered bowser drivers and payload statuses"
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/Admin" },
+      "description": "Trusted administrative identity documents"
+    }
+  }
+}

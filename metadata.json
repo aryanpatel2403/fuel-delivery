@@ -1,0 +1,6 @@
+{
+  "name": "FuelUp - On-Demand Fuel Delivery Platform",
+  "description": "On-demand fuel delivery platform with real-time GPS tracking, emergency SOS, vehicle tank capacity lookup, and dedicated customer, driver, and admin portals.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,143 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        (request.auth.token.email == '24172022025@gnu.ac.in')
+      );
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['id', 'name', 'email', 'role']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.name is string && data.name.size() <= 100 &&
+        data.email is string && data.email.size() <= 120 &&
+        data.role in ['customer', 'driver', 'admin'];
+    }
+
+    function isValidPump(data) {
+      return data.keys().hasAll(['id', 'name', 'brand', 'petrolPrice', 'dieselPrice', 'available']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.name is string && data.name.size() <= 150 &&
+        data.brand is string && data.brand.size() <= 50 &&
+        data.petrolPrice is number && data.petrolPrice > 0 &&
+        data.dieselPrice is number && data.dieselPrice > 0 &&
+        data.available is bool;
+    }
+
+    function isValidDriver(data) {
+      return data.keys().hasAll(['id', 'name', 'phone', 'vehicleNumber', 'status']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.name is string && data.name.size() <= 100 &&
+        data.phone is string && data.phone.size() <= 25 &&
+        data.vehicleNumber is string && data.vehicleNumber.size() <= 30 &&
+        data.status in ['idle', 'on_duty', 'delivering', 'offline'];
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll(['id', 'orderNumber', 'customerId', 'customerName', 'deliveryAddress', 'fuelType', 'quantityLiters', 'pricePerLiter', 'totalAmount', 'paymentMethod', 'status']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.orderNumber is string && data.orderNumber.size() <= 30 &&
+        data.customerId is string && data.customerId.size() <= 128 &&
+        data.customerName is string && data.customerName.size() <= 100 &&
+        data.deliveryAddress is string && data.deliveryAddress.size() <= 300 &&
+        data.fuelType in ['petrol', 'diesel'] &&
+        data.quantityLiters is number && data.quantityLiters > 0 &&
+        data.pricePerLiter is number && data.pricePerLiter > 0 &&
+        data.totalAmount is number && data.totalAmount > 0 &&
+        data.paymentMethod in ['gpay', 'cod'] &&
+        data.status in ['placed', 'confirmed', 'dispatched', 'out_for_delivery', 'arrived', 'completed', 'cancelled'];
+    }
+
+    // Admins Collection
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Users Collection (PII Isolated)
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isValidId(userId) && isOwner(userId) && isValidUser(incoming());
+      allow update: if isValidId(userId) && (isOwner(userId) || isAdmin()) && isValidUser(incoming());
+      allow delete: if isAdmin();
+    }
+
+    // Partner Fuel Pumps Collection (Transparent read for pump locator)
+    match /pumps/{pumpId} {
+      allow read: if true;
+      allow write: if isValidId(pumpId) && isAdmin() && isValidPump(incoming());
+    }
+
+    // Bowser Drivers Collection
+    match /drivers/{driverId} {
+      allow read: if true;
+      allow write: if isValidId(driverId) && (isAdmin() || (isSignedIn() && request.auth.uid == driverId)) && isValidDriver(incoming());
+    }
+
+    // Fuel Delivery Orders Collection
+    match /orders/{orderId} {
+      allow get: if isSignedIn() && (
+        resource.data.customerId == request.auth.uid ||
+        resource.data.assignedDriverId == request.auth.uid ||
+        isAdmin()
+      );
+
+      allow list: if isSignedIn() && (
+        resource.data.customerId == request.auth.uid ||
+        resource.data.assignedDriverId == request.auth.uid ||
+        isAdmin()
+      );
+
+      allow create: if isSignedIn() &&
+        isValidId(orderId) &&
+        isValidOrder(incoming()) &&
+        incoming().customerId == request.auth.uid;
+
+      allow update: if isSignedIn() && isValidId(orderId) && (
+        // Admin full control
+        isAdmin() ||
+        // Customer can only submit rating & review
+        (
+          resource.data.customerId == request.auth.uid &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['rating', 'review', 'updatedAt'])
+        ) ||
+        // Assigned driver can update delivery progress and location coordinates
+        (
+          resource.data.assignedDriverId == request.auth.uid &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'timeline', 'driverLat', 'driverLng', 'updatedAt'])
+        )
+      );
+
+      allow delete: if isAdmin();
+    }
+  }
+}
