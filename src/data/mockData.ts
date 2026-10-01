@@ -27,7 +27,15 @@ export const INITIAL_FUEL_PUMPS: FuelPumpStation[] = [
     rating: 4.8,
     openHours: '24x7 Open',
     available: true,
-    distanceKm: 1.8
+    distanceKm: 1.8,
+    phone: '+91 79 2685 4101',
+    managerName: 'Kiritbhai Desai',
+    totalNozzles: 12,
+    hasPetrol: true,
+    hasDiesel: true,
+    hasEVCharging: true,
+    amenities: ['Air Tower', 'EV Fast Charging (60kW)', 'Clean Restrooms', 'Cafe / Snacks', 'Nitrogen Inflation', 'PUC Testing'],
+    lastPriceUpdated: 'Today, 06:00 AM'
   },
   {
     id: 'pump-2',
@@ -43,7 +51,15 @@ export const INITIAL_FUEL_PUMPS: FuelPumpStation[] = [
     rating: 4.9,
     openHours: '24x7 Open',
     available: true,
-    distanceKm: 2.4
+    distanceKm: 2.4,
+    phone: '+91 79 2970 8822',
+    managerName: 'Sunil Shah',
+    totalNozzles: 16,
+    hasPetrol: true,
+    hasDiesel: true,
+    hasEVCharging: true,
+    amenities: ['Air Tower', 'EV Fast Charging (120kW)', 'Restrooms', 'Convenience Store', 'Lube Center', 'ATM'],
+    lastPriceUpdated: 'Today, 06:00 AM'
   },
   {
     id: 'pump-3',
@@ -59,7 +75,15 @@ export const INITIAL_FUEL_PUMPS: FuelPumpStation[] = [
     rating: 4.6,
     openHours: '06:00 AM - 11:30 PM',
     available: true,
-    distanceKm: 3.1
+    distanceKm: 3.1,
+    phone: '+91 79 2749 1920',
+    managerName: 'Jatin Trivedi',
+    totalNozzles: 10,
+    hasPetrol: true,
+    hasDiesel: true,
+    hasEVCharging: false,
+    amenities: ['Free Air Check', 'Clean Restrooms', 'XP95 Octane Petrol', 'Servo Lubes Store', 'Drinking Water'],
+    lastPriceUpdated: 'Today, 06:00 AM'
   },
   {
     id: 'pump-4',
@@ -75,7 +99,15 @@ export const INITIAL_FUEL_PUMPS: FuelPumpStation[] = [
     rating: 4.7,
     openHours: '24x7 Open',
     available: true,
-    distanceKm: 4.2
+    distanceKm: 4.2,
+    phone: '+91 79 2981 7733',
+    managerName: 'Mahesh Solanki',
+    totalNozzles: 14,
+    hasPetrol: true,
+    hasDiesel: true,
+    hasEVCharging: true,
+    amenities: ['Digital Air Gauge', 'EV Fast Charging (50kW)', 'Restrooms', 'Power 95 Petrol', 'Quick Lube Service'],
+    lastPriceUpdated: 'Today, 06:00 AM'
   },
   {
     id: 'pump-5',
@@ -91,7 +123,15 @@ export const INITIAL_FUEL_PUMPS: FuelPumpStation[] = [
     rating: 4.9,
     openHours: '24x7 Open',
     available: true,
-    distanceKm: 2.9
+    distanceKm: 2.9,
+    phone: '+91 79 2693 4500',
+    managerName: 'Alok Mukherjee',
+    totalNozzles: 12,
+    hasPetrol: true,
+    hasDiesel: true,
+    hasEVCharging: true,
+    amenities: ['Shell Select Café', 'Shell V-Power 99', 'Shell Recharge 60kW', 'Air & Water Service', 'Helix Oil Change', 'Premium Restrooms'],
+    lastPriceUpdated: 'Today, 06:00 AM'
   },
   {
     id: 'pump-6',
@@ -107,7 +147,15 @@ export const INITIAL_FUEL_PUMPS: FuelPumpStation[] = [
     rating: 4.7,
     openHours: '24x7 Open',
     available: true,
-    distanceKm: 8.5
+    distanceKm: 8.5,
+    phone: '+91 79 2328 9012',
+    managerName: 'Pravin Vaghela',
+    totalNozzles: 16,
+    hasPetrol: true,
+    hasDiesel: true,
+    hasEVCharging: true,
+    amenities: ['Speed 97 Petrol', 'EV Charging Corridor', 'Pure For Sure Certified', 'Rest Stop Café', 'Nitrogen Station', 'Commercial Truck Bay'],
+    lastPriceUpdated: 'Today, 06:00 AM'
   }
 ];
 

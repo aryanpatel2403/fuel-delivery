@@ -58,6 +58,9 @@ class FuelUpStore {
           };
           this.currentUser = newUser;
           this.saveToStorage(STORAGE_KEYS.CURRENT_USER, newUser);
+          if (userRole === 'admin') {
+            this.seedAdminDataIfEmpty();
+          }
           this.notify();
         }
       }
@@ -90,6 +93,21 @@ class FuelUpStore {
     this.listeners.forEach(fn => fn());
   }
 
+  private canSeedAdminData(): boolean {
+    const fbUser = auth.currentUser;
+    if (fbUser && (fbUser.email === '24172022025@gnu.ac.in' || fbUser.email === 'admin@fuelup.in')) {
+      return true;
+    }
+    return this.currentUser?.role === 'admin' && !!fbUser;
+  }
+
+  public seedAdminDataIfEmpty() {
+    if (!this.canSeedAdminData()) return;
+    if (this.drivers.length === 0) this.seedInitialDrivers();
+    if (this.pumps.length === 0) this.seedInitialPumps();
+    if (this.customers.length === 0) this.seedInitialCustomers();
+  }
+
   // --- Real-time Firestore Synchronizer ---
   private async initFirestoreSync() {
     if (this.isFirestoreInitialized) return;
@@ -107,11 +125,20 @@ class FuelUpStore {
           this.pumps = loadedPumps;
           this.notify();
         } else {
-          // Seed pumps once into Firestore
-          this.seedInitialPumps();
+          if (this.pumps.length === 0) {
+            this.pumps = [...INITIAL_FUEL_PUMPS];
+            this.notify();
+          }
+          if (this.canSeedAdminData()) {
+            this.seedInitialPumps();
+          }
         }
-      }, (error) => {
-        console.warn('Firestore pumps listener notice:', error);
+      }, () => {
+        // Fallback to in-memory pumps gracefully
+        if (this.pumps.length === 0) {
+          this.pumps = [...INITIAL_FUEL_PUMPS];
+          this.notify();
+        }
       });
 
       // 2. Synchronize Drivers with Firestore
@@ -125,11 +152,20 @@ class FuelUpStore {
           this.drivers = loadedDrivers;
           this.notify();
         } else {
-          // Seed drivers once into Firestore
-          this.seedInitialDrivers();
+          if (this.drivers.length === 0) {
+            this.drivers = [...INITIAL_DRIVERS];
+            this.notify();
+          }
+          if (this.canSeedAdminData()) {
+            this.seedInitialDrivers();
+          }
         }
-      }, (error) => {
-        console.warn('Firestore drivers listener notice:', error);
+      }, () => {
+        // Fallback to in-memory drivers gracefully
+        if (this.drivers.length === 0) {
+          this.drivers = [...INITIAL_DRIVERS];
+          this.notify();
+        }
       });
 
       // 3. Synchronize Orders Real-Time with Firestore
@@ -143,8 +179,8 @@ class FuelUpStore {
         loadedOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         this.orders = loadedOrders;
         this.notify();
-      }, (error) => {
-        console.warn('Firestore orders listener notice:', error);
+      }, () => {
+        // Graceful handling for guest/unauthenticated sessions
       });
 
       // 4. Synchronize Registered Customers with Firestore
@@ -158,44 +194,53 @@ class FuelUpStore {
           this.customers = loadedCustomers;
           this.notify();
         } else {
-          this.seedInitialCustomers();
+          if (this.customers.length === 0) {
+            this.customers = [...INITIAL_CUSTOMERS];
+            this.notify();
+          }
+          if (this.canSeedAdminData()) {
+            this.seedInitialCustomers();
+          }
         }
-      }, (error) => {
-        console.warn('Firestore users listener notice:', error);
+      }, () => {
+        // Graceful handling for guest/unauthenticated sessions
       });
 
     } catch (e) {
-      console.error('Error during Firestore setup sync:', e);
+      console.warn('Firestore sync notice:', e);
     }
   }
 
   private async seedInitialCustomers() {
+    if (!this.canSeedAdminData()) return;
     try {
       for (const customer of INITIAL_CUSTOMERS) {
         await setDoc(doc(db, 'users', customer.id), customer);
       }
-    } catch (e) {
-      console.warn('Customers seed deferred:', e);
+    } catch {
+      // Deferred silently without logging permission error
     }
   }
 
   private async seedInitialPumps() {
+    if (!this.canSeedAdminData()) return;
     try {
       for (const pump of INITIAL_FUEL_PUMPS) {
         await setDoc(doc(db, 'pumps', pump.id), pump);
       }
-    } catch (e) {
-      console.warn('Pumps seed deferred:', e);
+    } catch {
+      // Deferred silently without logging permission error
     }
   }
 
   private async seedInitialDrivers() {
+    if (!this.canSeedAdminData()) return;
     try {
       for (const driver of INITIAL_DRIVERS) {
         await setDoc(doc(db, 'drivers', driver.id), driver);
       }
-    } catch (e) {
-      console.warn('Drivers seed deferred:', e);
+    } catch {
+      // Deferred silently without logging permission error
     }
   }
 
@@ -220,6 +265,9 @@ class FuelUpStore {
 
   public async login(user: User) {
     this.setCurrentUser(user);
+    if (user.role === 'admin') {
+      this.seedAdminDataIfEmpty();
+    }
   }
 
   public async signUp(user: User) {
@@ -266,7 +314,7 @@ class FuelUpStore {
   public async updatePumpPrice(pumpId: string, petrolPrice: number, dieselPrice: number) {
     this.pumps = this.pumps.map(p => {
       if (p.id === pumpId) {
-        return { ...p, petrolPrice, dieselPrice };
+        return { ...p, petrolPrice, dieselPrice, lastPriceUpdated: 'Just now' };
       }
       return p;
     });
@@ -303,6 +351,50 @@ class FuelUpStore {
       });
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `pumps/${pumpId}`);
+    }
+  }
+
+  public async updatePump(pumpId: string, updates: Partial<FuelPumpStation>) {
+    this.pumps = this.pumps.map(p => {
+      if (p.id === pumpId) {
+        return { ...p, ...updates, lastPriceUpdated: 'Updated recently' };
+      }
+      return p;
+    });
+    this.notify();
+
+    try {
+      await updateDoc(doc(db, 'pumps', pumpId), {
+        ...updates,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `pumps/${pumpId}`);
+    }
+  }
+
+  public async addPump(newPump: FuelPumpStation) {
+    this.pumps = [newPump, ...this.pumps];
+    this.notify();
+
+    try {
+      await setDoc(doc(db, 'pumps', newPump.id), {
+        ...newPump,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, `pumps/${newPump.id}`);
+    }
+  }
+
+  public async deletePump(pumpId: string) {
+    this.pumps = this.pumps.filter(p => p.id !== pumpId);
+    this.notify();
+
+    try {
+      await deleteDoc(doc(db, 'pumps', pumpId));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `pumps/${pumpId}`);
     }
   }
 

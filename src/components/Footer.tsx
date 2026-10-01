@@ -47,8 +47,8 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                 </button>
               </li>
               <li>
-                <button onClick={() => setActiveTab('pricing')} className="hover:text-slate-900 transition-colors">
-                  Station Rates & Pump Finder
+                <button onClick={() => setActiveTab('stations')} className="hover:text-slate-900 transition-colors font-medium text-amber-600">
+                  Fuel Stations & OMC Network
                 </button>
               </li>
               <li>

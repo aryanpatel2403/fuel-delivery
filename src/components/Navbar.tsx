@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Fuel, Siren, LogIn, UserPlus, LogOut, User, 
-  ChevronDown, Truck, Shield, UserCheck 
+  ChevronDown, Truck, Shield, UserCheck, Building2 
 } from 'lucide-react';
 import { store } from '../services/store';
 
@@ -68,6 +68,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             Home
           </button>
 
+          {/* Main Module: Fuel Stations & Partner Network */}
+          <button
+            onClick={() => setActiveTab('stations')}
+            className={`flex items-center gap-1.5 transition-colors hover:text-slate-900 ${
+              activeTab === 'stations' || activeTab === 'pricing' ? 'text-amber-600 font-bold' : ''
+            }`}
+          >
+            <Building2 className="h-4 w-4 text-amber-500" />
+            <span>Fuel Stations</span>
+            <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800">Hubs</span>
+          </button>
+
           {/* Customer Specific Links */}
           {currentUser && currentUser.role === 'customer' && (
             <>
@@ -125,13 +137,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             </>
           )}
-
-          <button
-            onClick={() => setActiveTab('pricing')}
-            className={`transition-colors hover:text-slate-900 ${activeTab === 'pricing' ? 'text-amber-600 font-semibold' : ''}`}
-          >
-            Live Pricing
-          </button>
         </nav>
 
         {/* Zone 3: Actions & Auth Controls */}

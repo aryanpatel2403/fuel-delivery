@@ -62,6 +62,14 @@ export interface FuelPumpStation {
   openHours: string;
   available: boolean;
   distanceKm?: number;
+  phone?: string;
+  managerName?: string;
+  amenities?: string[];
+  hasPetrol?: boolean;
+  hasDiesel?: boolean;
+  hasEVCharging?: boolean;
+  totalNozzles?: number;
+  lastPriceUpdated?: string;
 }
 
 export type VehicleCategory = 'hatchback_sedan' | 'suv' | 'two_wheeler' | 'commercial';

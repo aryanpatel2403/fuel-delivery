@@ -11,11 +11,13 @@ import { GPayModal } from '../components/GPayModal';
 
 interface OrderFuelPageProps {
   initialMode?: DeliveryMode;
+  initialStationId?: string;
   onOrderPlaced: (orderId: string) => void;
 }
 
 export const OrderFuelPage: React.FC<OrderFuelPageProps> = ({
   initialMode = 'instant',
+  initialStationId,
   onOrderPlaced
 }) => {
   const currentUser = store.getCurrentUser();
@@ -24,7 +26,13 @@ export const OrderFuelPage: React.FC<OrderFuelPageProps> = ({
   // Order configuration state
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>(initialMode);
   const [fuelType, setFuelType] = useState<FuelType>('petrol');
-  const [selectedPumpId, setSelectedPumpId] = useState<string>(pumps[0]?.id || 'pump-1');
+  const [selectedPumpId, setSelectedPumpId] = useState<string>(initialStationId || pumps[0]?.id || 'pump-1');
+
+  useEffect(() => {
+    if (initialStationId) {
+      setSelectedPumpId(initialStationId);
+    }
+  }, [initialStationId]);
   
   // Location & Address
   const [district, setDistrict] = useState<string>('Ahmedabad');

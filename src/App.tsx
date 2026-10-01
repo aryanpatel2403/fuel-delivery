@@ -14,6 +14,7 @@ import { DriverDashboardPage } from './pages/DriverDashboardPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AdminCustomersPage } from './pages/AdminCustomersPage';
 import { AdminDriversPage } from './pages/AdminDriversPage';
+import { FuelStationsPage } from './pages/FuelStationsPage';
 import { PricingPage } from './pages/PricingPage';
 import { AuthPage } from './pages/AuthPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
@@ -25,6 +26,7 @@ import { LogIn, UserPlus, ShieldAlert } from 'lucide-react';
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('home');
   const [targetDeliveryMode, setTargetDeliveryMode] = useState<DeliveryMode>('instant');
+  const [targetStationId, setTargetStationId] = useState<string>('');
   const [activeOrderId, setActiveOrderId] = useState<string>('');
   const [currentUser, setCurrentUser] = useState(store.getCurrentUser());
 
@@ -50,6 +52,8 @@ export default function App() {
   };
 
   const handleSelectStationForOrder = (stationId: string) => {
+    setTargetStationId(stationId);
+    setTargetDeliveryMode('instant');
     setActiveTab('order');
   };
 
@@ -191,6 +195,7 @@ export default function App() {
         {activeTab === 'order' && renderProtectedView('customer', (
           <OrderFuelPage
             initialMode={targetDeliveryMode}
+            initialStationId={targetStationId}
             onOrderPlaced={handleOrderPlaced}
           />
         ))}
@@ -212,9 +217,10 @@ export default function App() {
           />
         ))}
 
-        {activeTab === 'pricing' && (
-          <PricingPage
+        {(activeTab === 'stations' || activeTab === 'pricing') && (
+          <FuelStationsPage
             onSelectStationForOrder={handleSelectStationForOrder}
+            onNavigateTab={setActiveTab}
           />
         )}
 

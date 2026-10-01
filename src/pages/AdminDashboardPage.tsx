@@ -247,7 +247,17 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onTrackO
             <h3 className="text-sm font-bold text-slate-900">Partner Station Rates & Status</h3>
             <p className="text-xs text-slate-500">Direct integration with pump dispensing meters</p>
           </div>
-          <span className="text-xs text-slate-400">Live API Synchronized</span>
+          <div className="flex items-center gap-2">
+            {onNavigateTab && (
+              <button
+                onClick={() => onNavigateTab('stations')}
+                className="flex items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-400 transition"
+              >
+                <span>Full Station Module →</span>
+              </button>
+            )}
+            <span className="text-xs text-slate-400 hidden sm:inline">Live API Synchronized</span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

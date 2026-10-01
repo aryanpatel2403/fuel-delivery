@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { 
   Fuel, Siren, ShieldCheck, Clock, MapPin, ArrowRight, 
-  CheckCircle, Truck, Zap, Smartphone, ChevronRight, Award
+  CheckCircle, Truck, Zap, Smartphone, ChevronRight, Award,
+  Building2, Star, ExternalLink
 } from 'lucide-react';
 import { store } from '../services/store';
 
@@ -83,19 +84,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </button>
 
               <button
+                onClick={() => setActiveTab('stations')}
+                className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-5 py-3.5 text-sm font-semibold text-amber-900 transition hover:bg-amber-100"
+              >
+                <Building2 className="h-4 w-4 text-amber-600" />
+                <span>Partner Fuel Stations</span>
+              </button>
+
+              <button
                 onClick={() => handleOrderClick('sos')}
                 className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-5 py-3.5 text-sm font-semibold text-red-700 transition hover:bg-red-100"
               >
                 <Siren className="h-4 w-4 text-red-600" />
                 <span>Emergency Fuel SOS</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('track')}
-                className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-              >
-                <Truck className="h-4 w-4 text-slate-500" />
-                <span>Track Active Order</span>
               </button>
             </div>
 
@@ -397,6 +398,90 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </button>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* 6.5. Partner Fuel Station Network Module Spotlight */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-semibold text-amber-600 mb-1">
+              <Building2 className="h-4 w-4" />
+              <span>Certified Fuel Station Network</span>
+              <span aria-hidden="true">·</span>
+              <span>Daily Calibrated Rates</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+              Partner Petrol Pumps Across the City
+            </h2>
+            <p className="text-xs text-slate-500 mt-1 max-w-xl">
+              Compare live tariffs from Reliance, Shell, Nayara, HP, and IndianOil. Order direct doorstep refueling dispatched straight from your preferred station.
+            </p>
+          </div>
+
+          <button
+            onClick={() => setActiveTab('stations')}
+            className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-slate-800 transition"
+          >
+            <span>Explore All {pumps.length} Fuel Stations</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+
+        {/* 3 Featured Station Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {pumps.slice(0, 3).map((station) => (
+            <div
+              key={station.id}
+              onClick={() => setActiveTab('stations')}
+              className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs hover:shadow-md transition cursor-pointer flex flex-col justify-between"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200">
+                    {station.brand}
+                  </span>
+                  <div className="flex items-center gap-1 text-[11px] font-bold text-amber-500">
+                    <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                    <span>{station.rating}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm group-hover:text-amber-600 transition">
+                    {station.name}
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1 truncate">
+                    <MapPin className="h-3 w-3 text-slate-400 shrink-0" />
+                    <span>{station.address}</span>
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-2.5 border border-slate-100 text-xs">
+                  <div>
+                    <span className="text-[10px] text-slate-500 block">Petrol Rate</span>
+                    <span className="font-extrabold text-slate-900">₹{station.petrolPrice.toFixed(2)}/L</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500 block">Diesel Rate</span>
+                    <span className="font-extrabold text-slate-900">₹{station.dieselPrice.toFixed(2)}/L</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
+                  <span>{station.openHours}</span>
+                  <span className="font-semibold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded text-[10px]">
+                    {station.distanceKm} km away
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-amber-600 group-hover:text-amber-700">
+                <span>View Station Specs & Order</span>
+                <ChevronRight className="h-4 w-4 transform group-hover:translate-x-1 transition" />
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
